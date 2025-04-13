@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0Q0FGNTAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHJ4PSIyIiByeT0iMiI+PC9yZWN0PjxsaW5lIHg9IjEyIiB5PSI2IiB4Mj0iMTIiIHkyPSIxOCI+PC9saW5lPjxsaW5lIHg9IjYiIHk9IjEyIiB4Mj0iMTgiIHkyPSIxMiI+PC9saW5lPjwvc3ZnPg==">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            perspective: 1000px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .card-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .flashcard {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            border-radius: 20px;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: white;
+        }
+
+        .card-content {
+            padding: 20px;
+            text-align: left;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .question, .answer {
+            margin: 0;
+            padding: 10px;
+            font-size: 1.2em;
+            line-height: 1.4;
+            text-align: left;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+        }
+
+        .category {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 0.9em;
+            color: #666;
+            text-align: left;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .progress {
+            color: #666;
+            margin: 20px 0;
+            font-size: 16px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .voice-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 2;
+        }
+
+        .voice-button {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .voice-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .voice-button img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .settings {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .settings select {
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .settings select:hover {
+            border-color: #4CAF50;
+        }
+
+        .settings label {
+            color: #666;
+            margin-right: 5px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .keyboard-shortcuts {
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        kbd {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 12px;
+        }
+
+        #audio-player {
+            display: none;
+        }
+
+        .loading .voice-button {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading .voice-button img {
+            animation: spin 1s linear infinite;
+        }
+
+        .voice-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .voice-group label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .settings-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Flashcards</h1>
+        <div class="settings">
+            <div class="settings-group">
+                <div class="voice-group">
+                    <label for="voice-select">Voice:</label>
+                    <select id="voice-select">
+                        {% for voice in voices %}
+                        <option value="{{ voice.id }}">{{ voice.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="voice-group">
+                    <label for="rate">Speed:</label>
+                    <select id="rate">
+                        <option value="0.8">Slow</option>
+                        <option value="1.0" selected>Normal</option>
+                        <option value="1.2">Fast</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="progress">Card <span id="current">1</span> of <span id="total">0</span></div>
+        <div class="card-container">
+            <div class="flashcard" onclick="toggleAnswer()">
+                <div class="voice-controls">
+                    <button class="voice-button" onclick="event.stopPropagation(); speakQuestion()" title="Speak Question">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwb2x5Z29uIHBvaW50cz0iMTEgNSA2IDkgMiA5IDIgMTUgNiAxNSAxMSAxOSAxMSA1Ij48L3BvbHlnb24+PHBhdGggZD0iTTE5LjA3IDQuOTNhMTAgMTAgMCAwIDEgMCAxNC4xNE0xNS41NCA4LjQ2YTUgNSAwIDAgMSAwIDcuMDciPjwvcGF0aD48L3N2Zz4=" alt="Speak">
+                    </button>
+                </div>
+                <div class="card-face card-front">
+                    <div class="card-content">
+                        <div class="question" id="question"></div>
+                        <div class="category" id="category"></div>
+                    </div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="card-content">
+                        <div class="answer" id="answer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="controls">
+            <button onclick="previousCard()">Previous</button>
+            <button onclick="nextCard()">Next</button>
+        </div>
+        <div class="keyboard-shortcuts">
+            Shortcuts: <kbd>Space</kbd> Flip Card | <kbd>←</kbd> Previous | <kbd>→</kbd> Next | <kbd>V</kbd> Speak
+        </div>
+        <audio id="audio-player"></audio>
+    </div>
+
+    <script>
+        let cards = [];
+        let currentIndex = 0;
+        let isPlaying = false;
+        const TTS_ENDPOINT = "{{ tts_endpoint }}";
+        let audioContext = null;
+        let source = null;
+
+        async function speak(text) {
+            if (isPlaying && source) {
+                source.stop();
+                isPlaying = false;
+            }
+
+            const voiceControls = document.querySelector('.voice-controls');
+            voiceControls.classList.add('loading');
+
+            try {
+                const voice = document.getElementById('voice-select').value;
+                const speed = parseFloat(document.getElementById('rate').value);
+
+                console.log('Requesting TTS for:', {text, voice, speed});
+
+                const response = await fetch(TTS_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        input: text,
+                        voice: voice,
+                        response_format: "pcm",
+                        speed: speed
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`TTS request failed: ${response.status}`);
+                }
+
+                // Initialize AudioContext on first use (browser requires user interaction)
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                // Get the PCM data
+                const arrayBuffer = await response.arrayBuffer();
+                console.log('Received audio data size:', arrayBuffer.byteLength, 'bytes');
+
+                // Convert the Int16 PCM data to Float32
+                const int16Data = new Int16Array(arrayBuffer);
+                const float32Data = new Float32Array(int16Data.length);
+                
+                // Convert Int16 to Float32 (normalize to [-1.0, 1.0])
+                for (let i = 0; i < int16Data.length; i++) {
+                    float32Data[i] = int16Data[i] / 32768.0;
+                }
+
+                // Create an AudioBuffer (mono, 24000Hz sample rate for Kokoro)
+                const audioBuffer = audioContext.createBuffer(1, float32Data.length, 24000);
+                
+                // Copy the converted data to the audio buffer
+                audioBuffer.copyToChannel(float32Data, 0);
+
+                // Create and configure source
+                if (source) {
+                    source.stop();
+                }
+                source = audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+
+                // Add a gain node for volume control
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = 1.0; // Full volume
+
+                // Connect nodes
+                source.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                isPlaying = true;
+                
+                source.onended = () => {
+                    isPlaying = false;
+                    source = null;
+                    console.log('Audio playback completed');
+                };
+
+                console.log('Starting audio playback');
+                source.start(0);
+            } catch (error) {
+                console.error('Error playing audio:', error);
+                console.error('Error details:', error.message);
+                alert('Failed to play audio. Check console for details.');
+            } finally {
+                voiceControls.classList.remove('loading');
+            }
+        }
+
+        function speakQuestion() {
+            const card = cards[currentIndex];
+            if (!card) {
+                console.warn('No card available to speak');
+                return;
+            }
+            speak(card.question);
+        }
+
+        function speakAnswer() {
+            const card = cards[currentIndex];
+            if (!card) {
+                console.warn('No card available to speak');
+                return;
+            }
+            speak(card.answer);
+        }
+
+        async function loadCards() {
+            try {
+                const response = await fetch('/api/cards');
+                cards = await response.json();
+                document.getElementById('total').textContent = cards.length;
+                showCurrentCard();
+            } catch (error) {
+                console.error('Failed to load cards:', error);
+                alert('Failed to load flashcards. Please refresh the page.');
+            }
+        }
+
+        function showCurrentCard() {
+            const card = cards[currentIndex];
+            if (!card) {
+                console.warn('No card available to display');
+                return;
+            }
+            document.getElementById('question').textContent = card.question;
+            document.getElementById('answer').textContent = card.answer;
+            document.getElementById('category').textContent = card.category;
+            document.getElementById('current').textContent = currentIndex + 1;
+            
+            // Reset card flip
+            document.querySelector('.flashcard').classList.remove('flipped');
+            
+            // Stop any ongoing audio
+            if (isPlaying && source) {
+                source.stop();
+                isPlaying = false;
+                source = null;
+            }
+        }
+
+        function toggleAnswer() {
+            const card = cards[currentIndex];
+            if (!card) {
+                console.warn('No card available to flip');
+                return;
+            }
+            
+            const flashcard = document.querySelector('.flashcard');
+            const isFlipped = flashcard.classList.toggle('flipped');
+            
+            // Speak the answer when card is flipped to show answer
+            if (isFlipped) {
+                speakAnswer();
+            }
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                showCurrentCard();
+            }
+        }
+
+        function previousCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                showCurrentCard();
+            }
+        }
+
+        // Handle keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextCard();
+            if (e.key === 'ArrowLeft') previousCard();
+            if (e.key === ' ') {
+                e.preventDefault(); // Prevent page scroll
+                toggleAnswer();
+            }
+            if (e.key === 'v') speakQuestion();
+        });
+
+        // Initialize audio context on first user interaction
+        document.addEventListener('click', () => {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('AudioContext initialized');
+            }
+        }, { once: true });
+
+        // Load cards when the page loads
+        loadCards();
+    </script>
+</body>
+</html> 
