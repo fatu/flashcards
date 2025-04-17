@@ -26,73 +26,110 @@
 
         .card-container {
             width: 100%;
-            height: 400px;
+            max-width: 800px;
+            min-height: 300px;
             position: relative;
-            margin: 20px 0;
+            margin: 20px auto;
+            perspective: 1000px;
         }
 
         .flashcard {
-            position: absolute;
+            position: relative;
             width: 100%;
             height: 100%;
             transform-style: preserve-3d;
-            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.8s;
             cursor: pointer;
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: auto;
+            min-height: 300px;
+            backface-visibility: hidden;
             border-radius: 20px;
+            background: white;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .card-content {
+            padding: 40px 30px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            position: relative;
+        }
+
+        .question, .answer {
+            font-size: 1.2em;
+            line-height: 1.6;
+            text-align: left;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            margin: 0;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            max-height: none;
+            overflow-y: auto;
+        }
+
+        .answer {
+            margin-top: 20px;
+            padding-top: 30px;
+        }
+
+        .category {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 0.9em;
+            color: #666;
+            background: rgba(248, 249, 250, 0.9);
+            padding: 5px 15px;
+            border-radius: 15px;
+            z-index: 1;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
         }
 
         .flashcard.flipped {
             transform: rotateY(180deg);
         }
 
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 30px;
-            border-radius: 20px;
-            background: white;
-            box-sizing: border-box;
+        /* Ensure proper height calculations during flip */
+        .card-container, .flashcard, .card-face {
+            transition: transform 0.8s, height 0.4s;
         }
 
-        .card-back {
-            transform: rotateY(180deg);
-            background: white;
+        /* Add scrollbar styling */
+        .question::-webkit-scrollbar,
+        .answer::-webkit-scrollbar {
+            width: 8px;
         }
 
-        .card-content {
-            padding: 20px;
-            text-align: left;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            max-width: 100%;
-            box-sizing: border-box;
+        .question::-webkit-scrollbar-track,
+        .answer::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
         }
 
-        .question, .answer {
-            margin: 0;
-            padding: 10px;
-            font-size: 1.2em;
-            line-height: 1.4;
-            text-align: left;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            max-width: 100%;
+        .question::-webkit-scrollbar-thumb,
+        .answer::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
         }
 
-        .category {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            font-size: 0.9em;
-            color: #666;
-            text-align: left;
+        .question::-webkit-scrollbar-thumb:hover,
+        .answer::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
 
         .controls {
@@ -275,6 +312,12 @@
                         <option value="1.2">Fast</option>
                     </select>
                 </div>
+                <div class="voice-group">
+                    <label for="file-select">Flashcard Set:</label>
+                    <select id="file-select" onchange="loadSelectedFile()">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
             </div>
         </div>
         <div class="progress">Card <span id="current">1</span> of <span id="total">0</span></div>
@@ -426,9 +469,11 @@
 
         async function loadCards() {
             try {
-                const response = await fetch('/api/cards');
+                const selectedFile = document.getElementById('file-select').value;
+                const response = await fetch(`/api/cards?file=${selectedFile}`);
                 cards = await response.json();
                 document.getElementById('total').textContent = cards.length;
+                currentIndex = 0;
                 showCurrentCard();
             } catch (error) {
                 console.error('Failed to load cards:', error);
@@ -508,7 +553,36 @@
         }, { once: true });
 
         // Load cards when the page loads
-        loadCards();
+        async function loadAvailableFiles() {
+            try {
+                const response = await fetch('/api/files');
+                const files = await response.json();
+                const select = document.getElementById('file-select');
+                select.innerHTML = ''; // Clear loading option
+                
+                files.forEach(file => {
+                    const option = document.createElement('option');
+                    option.value = file;
+                    option.textContent = file.replace('.json', '').replace(/_/g, ' ');
+                    select.appendChild(option);
+                });
+                
+                // Load the first file by default
+                if (files.length > 0) {
+                    loadCards();
+                }
+            } catch (error) {
+                console.error('Failed to load available files:', error);
+                alert('Failed to load available flashcard sets. Please refresh the page.');
+            }
+        }
+
+        // Initialize the page
+        loadAvailableFiles();
+
+        function loadSelectedFile() {
+            loadCards();
+        }
     </script>
 </body>
 </html> 
