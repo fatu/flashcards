@@ -21,7 +21,7 @@ def get_available_voices():
     return sorted(voices, key=lambda x: x['name'])
 
 # Configure TTS endpoint
-app.config['KOKORO_TTS_ENDPOINT'] = os.getenv('KOKORO_TTS_ENDPOINT', 'http://0.0.0.0:8880/v1/audio/speech')
+app.config['KOKORO_TTS_ENDPOINT'] = os.getenv('KOKORO_TTS_ENDPOINT', 'http://10.0.0.155:8880/v1/audio/speech')
 
 @app.route('/')
 def index():
@@ -55,7 +55,7 @@ def get_files():
 
 def run_app(debug=True):
     """Run the Flask application."""
-    port = int(os.getenv('FLASK_PORT', 9011))
+    port = int(os.getenv('FLASK_PORT', 9001))
     app.run(host='0.0.0.0', debug=debug, port=port)
 
 if __name__ == '__main__':
